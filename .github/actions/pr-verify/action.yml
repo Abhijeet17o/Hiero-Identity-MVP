@@ -1,0 +1,49 @@
+name: PR VC Verify
+description: Run the Python PR verifier to check a Verifiable Credential (VC) against a commit author email.
+
+inputs:
+  vc_path:
+    description: 'Path to VC JSON file'
+    required: false
+    default: ''
+  email:
+    description: 'Commit author email to verify against VC subject'
+    required: true
+  generate_sample:
+    description: 'Generate a sample VC and verify it instead of using an existing VC file'
+    required: false
+    default: 'false'
+  sample_path:
+    description: 'Path to write sample VC when generate_sample is true'
+    required: false
+    default: 'sample_vc.json'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run PR verifier
+      shell: bash
+      run: |
+        if [ "${{ inputs.generate_sample }}" = "true" ]; then
+          python pr_verify.py --generate-sample "${{ inputs.sample_path }}"
+          python pr_verify.py --vc "${{ inputs.sample_path }}" --email "${{ inputs.email }}"
+        elif [ -n "${{ inputs.vc_path }}" ]; then
+          python pr_verify.py --vc "${{ inputs.vc_path }}" --email "${{ inputs.email }}"
+        else
+          echo "No VC path provided and generate_sample != true; failing."
+          exit 1
+        fi

@@ -1,0 +1,15 @@
+name: PR VC Verify
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run local PR VC Verify action
+        uses: ./.github/actions/pr-verify
+        with:
+          generate_sample: 'true'
+          email: 'alice@example.com'
